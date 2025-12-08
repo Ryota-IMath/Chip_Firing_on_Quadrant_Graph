@@ -1,0 +1,266 @@
+def generate_tikz_from_triangle(
+    text, mode="both", symmetric=True,
+    xscale=0.35, yscale=0.35,
+    circle_radius=0.135, dot_radius=0.21,
+    circle_thickness="thin"
+):
+    # ChatGPT assisted in code-writing
+
+    def parse_table(text):
+        rows = []
+        for raw in text.strip().splitlines():
+            line = raw.strip()
+            if not line:
+                continue
+            rows.append(list(map(int, line.split())))
+        return rows
+
+    def detect_triangles(rows, mode="both"):
+        R = len(rows)
+        mark = [[False] * len(rows[r]) for r in range(R)]
+        if mode in {"upright", "both"}:
+            for r in range(R - 1):
+                for c in range(len(rows[r])):
+                    if c < len(rows[r + 1]) and c + 1 < len(rows[r + 1]):
+                        v0, v1, v2 = rows[r][c], rows[r + 1][c], rows[r + 1][c + 1]
+                        if v0 == v1 == v2:
+                            mark[r][c] = mark[r + 1][c] = mark[r + 1][c + 1] = True
+        if mode in {"inverted", "both"}:
+            for r in range(1, R):
+                for c in range(len(rows[r])):
+                    if c - 1 >= 0 and c < len(rows[r - 1]):
+                        v0, v1, v2 = rows[r][c], rows[r - 1][c - 1], rows[r - 1][c]
+                        if v0 == v1 == v2:
+                            mark[r][c] = mark[r - 1][c - 1] = mark[r - 1][c] = True
+        return mark
+
+    def enforce_symmetry(mark):
+        for r in range(len(mark)):
+            n = len(mark[r])
+            for c in range(n // 2):
+                m = n - 1 - c
+                if mark[r][c] or mark[r][m]:
+                    mark[r][c] = mark[r][m] = True
+
+    def tikz_document_horizontal(rows, mark):
+        lines = [
+            r"\documentclass[tikz,border=5pt]{standalone}",
+            r"\usepackage{tikz}",
+            r"\begin{document}",
+            rf"\begin{{tikzpicture}}[x={xscale}cm,y={yscale}cm]"
+        ]
+        R = len(rows)
+        for r in range(R):
+            n = len(rows[r])
+            yoff = -(n - 1) / 2.0
+            for c in range(n):
+                x = float(r)   # rows to the right
+                y = yoff + c   # columns centered vertically
+                if mark[r][c]:
+                    # Small filled dot (not bold)
+                    lines.append(
+                        f"  \\fill ({x:.3f}, {y:.3f}) circle [radius={dot_radius:.3f}];"
+                    )
+                else:
+                    # Open circles (bolder outline)
+                    lines.append(
+                        f"  \\draw[{circle_thickness}] ({x:.3f}, {y:.3f}) circle [radius={circle_radius:.3f}];"
+                    )
+        lines += [r"\end{tikzpicture}", r"\end{document}"]
+        return "\n".join(lines)
+
+    rows = parse_table(text)
+    mark = detect_triangles(rows, mode)
+    if symmetric:
+        enforce_symmetry(mark)
+    return tikz_document_horizontal(rows, mark)
+
+# Example triangle data
+triangle_data = """
+
+0 
+
+128 128 
+
+128 0 128 
+
+96 64 64 96 
+
+64 80 0 80 64 
+
+40 72 40 40 72 40 
+
+24 56 56 0 56 56 24 
+
+14 40 56 28 28 56 40 14 
+
+8 27 48 42 0 42 48 27 8 
+
+18 38 45 21 21 45 38 18 
+
+11 28 41 33 0 33 41 28 11 
+
+6 19 35 37 16 16 37 35 19 6 
+
+13 27 36 27 0 27 36 27 13 
+
+8 20 31 32 14 14 32 31 20 8 
+
+14 26 32 23 0 23 32 26 14 
+
+9 20 29 27 11 11 27 29 20 9 
+
+5 14 25 28 19 0 19 28 25 14 5 
+
+10 19 26 24 10 10 24 26 19 10 
+
+6 15 23 25 17 0 17 25 23 15 6 
+
+11 19 24 21 8 8 21 24 19 11 
+
+7 15 21 23 15 0 15 23 21 15 7 
+
+11 18 22 19 8 8 19 22 18 11 
+
+7 14 20 21 14 0 14 21 20 14 7 
+
+4 10 17 21 18 7 7 18 21 17 10 4 
+
+7 14 19 19 13 0 13 19 19 14 7 
+
+4 10 17 19 16 7 7 16 19 17 10 4 
+
+7 14 18 17 12 0 12 17 18 14 7 
+
+4 10 16 18 15 6 6 15 18 16 10 4 
+
+7 13 17 17 11 0 11 17 17 13 7 
+
+4 10 15 17 14 5 5 14 17 15 10 4 
+
+7 13 16 15 10 0 10 15 16 13 7 
+
+4 10 15 15 12 5 5 12 15 15 10 4 
+
+7 13 15 13 9 0 9 13 15 13 7 
+
+4 10 14 14 11 4 4 11 14 14 10 4 
+
+7 12 14 13 8 0 8 13 14 12 7 
+
+4 9 13 14 11 4 4 11 14 13 9 4 
+
+7 11 13 13 8 0 8 13 13 11 7 
+
+4 9 12 13 11 4 4 11 13 12 9 4 
+
+7 11 12 12 8 0 8 12 12 11 7 
+
+4 9 12 12 10 4 4 10 12 12 9 4 
+
+7 11 12 11 7 0 7 11 12 11 7 
+
+4 9 12 11 9 4 4 9 11 12 9 4 
+
+7 11 11 10 7 0 7 10 11 11 7 
+
+4 9 11 10 9 4 4 9 10 11 9 4 
+
+7 10 10 10 7 0 7 10 10 10 7 
+
+4 8 10 10 9 4 4 9 10 10 8 4 
+
+6 9 10 10 7 0 7 10 10 9 6 
+
+4 7 9 10 9 4 4 9 10 9 7 4 
+
+6 8 9 10 7 0 7 10 9 8 6 
+
+4 7 8 9 9 4 4 9 9 8 7 4 
+
+6 8 8 9 7 0 7 9 8 8 6 
+
+4 7 8 8 8 4 4 8 8 8 7 4 
+
+6 8 8 8 6 0 6 8 8 8 6 
+
+4 7 8 8 7 3 3 7 8 8 7 4 
+
+6 8 8 7 5 0 5 7 8 8 6 
+
+4 7 8 7 6 3 3 6 7 8 7 4 
+
+6 8 7 6 5 0 5 6 7 8 6 
+
+4 7 7 6 6 3 3 6 6 7 7 4 
+
+6 7 6 6 5 0 5 6 6 7 6 
+
+4 6 6 6 6 3 3 6 6 6 6 4 
+
+5 6 6 6 5 0 5 6 6 6 5 
+
+3 5 6 6 6 3 3 6 6 6 5 3 
+
+4 5 6 6 5 0 5 6 6 5 4 
+
+3 4 5 6 6 3 3 6 6 5 4 3 
+
+4 4 5 6 5 0 5 6 5 4 4 
+
+3 4 4 5 6 3 3 6 5 4 4 3 
+
+4 4 4 5 5 0 5 5 4 4 4 
+
+3 4 4 4 5 3 3 5 4 4 4 3 
+
+4 4 4 4 4 0 4 4 4 4 4 
+
+3 4 4 4 4 2 2 4 4 4 4 3 
+
+4 4 4 4 3 0 3 4 4 4 4 
+
+3 4 4 4 3 1 1 3 4 4 4 3 
+
+4 4 4 3 2 0 2 3 4 4 4 
+
+3 4 4 3 2 1 1 2 3 4 4 3 
+
+4 4 3 2 2 0 2 2 3 4 4 
+
+3 4 3 2 2 1 1 2 2 3 4 3 
+
+4 3 2 2 2 0 2 2 2 3 4 
+
+3 3 2 2 2 1 1 2 2 2 3 3 
+
+3 2 2 2 2 0 2 2 2 2 3 
+
+2 2 2 2 2 1 1 2 2 2 2 2 
+
+2 2 2 2 2 0 2 2 2 2 2 
+
+2 2 2 2 1 1 2 2 2 2 
+
+2 2 2 2 0 2 2 2 2 
+
+2 2 2 1 1 2 2 2 
+
+2 2 2 0 2 2 2 
+
+2 2 1 1 2 2 
+
+2 2 0 2 2 
+
+2 1 1 2 
+
+2 0 2 
+
+1 1 
+
+0
+
+"""
+
+tikz_code = generate_tikz_from_triangle(triangle_data)
+print(tikz_code)
