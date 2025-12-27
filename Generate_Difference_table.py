@@ -1,5 +1,6 @@
 def difference_table(n):
     l1 = [2**n]
+    print(str(2**n) + " " + str(2**n))
     stab = False
     while not stab:
         l2 = [l1[0]//2]
@@ -14,7 +15,7 @@ def difference_table(n):
             l1 = l1[1:]
         if l1[-1] == 0:
             l1 = l1[:len(l1)-1]
-        l5 = [abs(t - s) for s, t in zip(l1, l1[1:])]
+        l5 = [l1[0]]+ [abs(t - s) for s, t in zip(l1, l1[1:])] + [l1[-1]]
         str_out = ""
         for s in l5:
             str_out = str_out + str(s) +" "
