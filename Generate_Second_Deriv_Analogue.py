@@ -2,7 +2,7 @@ l1 = [2**9]
 
 row_count=1
 stab = False
-print("-.") # We already know that the first row of diff table is 2**n, -2**n.
+print("-,") # We already know that the first row of diff table is 2**n, -2**n.
 while not stab:
     l2 = [l1[0]//2]
     for i in range(1, len(l1)):
