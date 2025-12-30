@@ -1,0 +1,36 @@
+l1 = [2**9]
+
+row_count=1
+stab = False
+print("-.") # We already know that the first row of diff table is 2**n, -2**n.
+while not stab:
+    l2 = [l1[0]//2]
+    for i in range(1, len(l1)):
+        l2.append(l1[i]//2 + l1[i-1]//2)
+    l2.append(l1[len(l1)-1]//2)
+    l1 = l2
+    s1 = set(l1)
+    if not (s1-set([1, 0])):
+        stab = True
+    if l1[0] == 0:
+        l1 = l1[1:]
+    if l1[-1] == 0:
+        l1 = l1[:len(l1)-1]
+    l5 = [l1[0]] + [(t - s) for s, t in zip(l1, l1[1:])] + [-l1[-1]]
+    l6 = [(t - s) for s, t in zip(l5, l5[1:])]
+    if len(l6) > 0:
+        if l6[0] == 0:
+            s = "0,"
+        elif l6[0] > 0:
+            s= "+,"
+        else:
+            s = "-,"
+        for t in l6[1:]:
+            if t > 0:
+                s = s + " +,"
+            elif t < 0:
+                s = s + " -,"
+            else:
+                s = s + " 0,"
+        print(s)
+    row_count+= 1
