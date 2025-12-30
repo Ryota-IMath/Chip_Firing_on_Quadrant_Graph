@@ -17,6 +17,6 @@ def total_firings(n):
             l1 = l1[:len(l1)-1]
     return fire_count
 sequence_total = ""
-for n in range(26):
+for n in range(28):
     sequence_total = sequence_total + str(total_firings(n)) + ", "
 print(sequence_total)
